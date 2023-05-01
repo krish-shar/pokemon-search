@@ -18,3 +18,7 @@ buildNumber.properties
 .mvn/timing.properties
 .mvn/wrapper/maven-wrapper.jar
 gitreset.sh
+
+.DS_Store
+
+.idea/
