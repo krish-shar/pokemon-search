@@ -1,0 +1,63 @@
+.root {
+    -fx-text-alignment: center;
+    -fx-font-size: 14;
+    -fx-font-weight: 500;
+    -fx-font-family: Helvetica;
+    -fx-padding: 4px;
+    -fx-background-color: #ffffff;
+    -fx-border-color: #000000;
+    -fx-border-width: 4px;
+    -fx-border-radius: 1px;
+
+}
+.separator {
+    -fx-background-color: #ff0000;
+}
+
+.text-field {
+    -fx-background-color: #ffffff;
+    -fx-border-color: #000000;
+    -fx-border-width: 1px;
+    -fx-border-radius: 4px;
+    -fx-padding: 4px;
+}
+
+.scroll-pane {
+    -fx-background-color: white;
+    -fx-padding: 10px;
+    -fx-border-color: #C0C0C0;
+    -fx-border-width: 1px;
+    -fx-border-radius: 4px;
+}
+
+.scroll-pane > .viewport {
+    -fx-background-color: transparent;
+}
+
+.scroll-pane > .content {
+    -fx-background-color: white;
+    -fx-border-color: #C0C0C0;
+    -fx-border-width: 1px;
+    -fx-border-radius: 4px;
+}
+
+.scroll-bar:vertical {
+    -fx-background-color: #F5F5F5;
+}
+
+.scroll-bar:horizontal {
+    -fx-background-color: #F5F5F5;
+}
+
+.scroll-bar:vertical > .thumb {
+    -fx-background-color: #C0C0C0;
+    -fx-background-insets: 0, 0, 1, 2;
+    -fx-background-radius: 4px;
+}
+
+.scroll-bar:horizontal > .thumb {
+    -fx-background-color: #C0C0C0;
+    -fx-background-insets: 0, 0, 2, 1;
+    -fx-background-radius: 4px;
+}
+

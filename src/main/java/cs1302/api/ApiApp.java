@@ -13,6 +13,8 @@ import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
+import javafx.scene.text.Font;
+import javafx.scene.text.FontWeight;
 import javafx.scene.text.Text;
 import javafx.scene.text.TextFlow;
 import javafx.stage.Stage;
@@ -25,6 +27,7 @@ import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Locale;
 
 
 /**
@@ -64,36 +67,42 @@ public class ApiApp extends Application {
     Button nextCard;
     Button favoriteCard;
     Button prevCard;
-    TextFlow pokemonInfo;
+    ScrollPane scrollPane;
+    Text pokemonInfoText;
     Separator divider;
     ProgressBar loadingBar;
 
     int cardIndex = 0;
     List<Image> cardImages = new LinkedList<>();
+    List<Image> favoriteCardImages = new LinkedList<>();
     List<PokeTcgResponse.Card> cards = new LinkedList<>();
     List<PokeTcgResponse.Card> favoriteCards = new LinkedList<>();
+    List<String> favoriteCardIDs = new LinkedList<>();
 
     /**
      * Constructs an {@code ApiApp} object. This default (i.e., no argument)
      * constructor is executed in Step 2 of the JavaFX Application Life-Cycle.
      */
     public ApiApp() {
-        root = new VBox();
-        searchContainer = new VBox();
+        root = new VBox(8);
+        searchContainer = new VBox(8);
         searchContainer.setAlignment(Pos.CENTER);
-        searchLayer = new HBox();
+        searchLayer = new HBox(8);
         searchLayer.setAlignment(Pos.CENTER);
-        pokemonImages = new VBox();
-        pokemonContainer = new HBox();
+        pokemonImages = new VBox(8);
+        pokemonContainer = new HBox(8);
         pokemonContainer.setAlignment(Pos.CENTER);
-        cardContainer = new VBox();
+        cardContainer = new VBox(8);
         cardContainer.setAlignment(Pos.CENTER);
-        cardButtons = new HBox();
+        cardButtons = new HBox(8);
         searchField = new TextField("Charizard");
         searchButton = new Button("Search");
         loadingText = new Text("Enter a pokemon name above, and click search!");
         divider = new Separator();
-        pokemonInfo = new TextFlow();
+        scrollPane = new ScrollPane();
+        scrollPane.setFitToWidth(true);
+        scrollPane.setMinWidth(200);
+        pokemonInfoText = new Text();
         nextCard = new Button("Next");
         prevCard = new Button("Back");
         favoriteCard = new Button("Favorite");
@@ -103,7 +112,8 @@ public class ApiApp extends Application {
         showFavorites = new Button("Show Favorites");
         loadingBar = new ProgressBar();
         loadingBar.setProgress(0);
-         favoritesStage = new Stage();
+        favoritesStage = new Stage();
+
     } // ApiApp
 
     /** {@inheritDoc} */
@@ -130,16 +140,19 @@ public class ApiApp extends Application {
         searchContainer.getChildren().addAll(searchLayer, loadingText);
         searchLayer.getChildren().addAll(searchField, searchButton, showFavorites);
         pokemonImages.getChildren().addAll(normalView, divider, shinyView, loadingBar);
-        pokemonContainer.getChildren().addAll(pokemonImages, pokemonInfo,
+        pokemonContainer.getChildren().addAll(pokemonImages, scrollPane,
                 cardContainer);
         cardContainer.getChildren().addAll(cardView, cardButtons);
         cardButtons.getChildren().addAll(prevCard, favoriteCard, nextCard);
+        scrollPane.setContent(pokemonInfoText);
         scene = new Scene(root);
+        scene.getStylesheets().add("file:resources/styles.css");
         // setup stage
         stage.setTitle("ApiApp!");
         stage.setScene(scene);
         stage.setOnCloseRequest(event -> Platform.exit());
-        stage.sizeToScene();
+        stage.setWidth(600);
+        stage.setResizable(false);
         stage.show();
 
     } // start
@@ -154,6 +167,7 @@ public class ApiApp extends Application {
             } else {
                 cardIndex = 0;
             } // if
+            checkFavorite();
             cardView.setImage(cardImages.get(cardIndex));
             if (favoriteCards.contains(cards.get(cardIndex))) {
                 favoriteCard.setText("Unfavorite");
@@ -167,6 +181,7 @@ public class ApiApp extends Application {
             } else {
                 cardIndex = cardImages.size() - 1;
             } // if
+            checkFavorite();
             cardView.setImage(cardImages.get(cardIndex));
             if (favoriteCards.contains(cards.get(cardIndex))){
                 favoriteCard.setText("Unfavorite");
@@ -186,14 +201,22 @@ public class ApiApp extends Application {
     } // init
 
     public void getPokemonInfo(String pokemonName) {
-        cardIndex = 0;
-        if (pokemonName.equals("")) {
-            System.out.println("No pokemon name entered");
-            // TODO: Throw exception
-            return;
-        } // if
-        try {
 
+        try {
+            Platform.runLater(() -> loadingText.setText("Loading..."));
+            Platform.runLater(() -> loadingBar.setProgress(0));
+            cardImages.clear();
+            cards.clear();
+            nextCard.setDisable(true);
+            Platform.runLater(() -> favoriteCard.setText("Favorite"));
+            favoriteCard.setDisable(true);
+            prevCard.setDisable(true);
+            cardIndex = 0;
+            if (pokemonName.equals("")) {
+                System.out.println("No pokemon name entered");
+                // TODO: Throw exception
+                return;
+            } // if
             String pokemonTerm = URLEncoder.encode(pokemonName.toLowerCase(), StandardCharsets.UTF_8);
             String pokeApiURL = PokeAPI + pokemonTerm;
             System.out.println(pokeApiURL);
@@ -236,12 +259,11 @@ public class ApiApp extends Application {
 
             cards = new LinkedList<>();
             cardImages = new LinkedList<>();
-            Platform.runLater(() -> loadingText.setText("Loading..."));
-            Platform.runLater(() -> loadingBar.setProgress(0));
+
             // get pokemon images
-            Image normalImage = new Image(pokeApiReponse.sprites.other.official_artwork.front_default);
+            Image normalImage = new Image(pokeApiReponse.sprites.other.official_artwork.frontDefault);
             Platform.runLater(() -> loadingBar.setProgress((double) 1 /(pokeTcgResponse.data.size() + 2)));
-            Image shinyImage = new Image(pokeApiReponse.sprites.other.official_artwork.front_shiny);
+            Image shinyImage = new Image(pokeApiReponse.sprites.other.official_artwork.frontShiny);
             Platform.runLater(() -> loadingBar.setProgress((double) 2 /(pokeTcgResponse.data.size() + 2)));
             for (int i = 0; i < pokeTcgResponse.data.size(); i++) {
                 Image image = new Image(pokeTcgResponse.data.get(i).images.small);
@@ -260,10 +282,40 @@ public class ApiApp extends Application {
             Platform.runLater(() -> loadingText.setText("Found " + pokemonName.toLowerCase() + "!"));
             Platform.runLater(() -> loadingBar.setProgress(1));
 
+            // add information about the Pokémon in the text area
+            StringBuilder pokemonInfo = new StringBuilder();
+            pokemonInfo.append("Name: ").append(pokeApiReponse.name.toUpperCase()).append("\n\n");
+            pokemonInfo.append("ID: ").append(pokeApiReponse.id).append("\n\n");
+            pokemonInfo.append("Height: ").append(pokeApiReponse.height).append("\n\n");
+            pokemonInfo.append("Weight: ").append(pokeApiReponse.weight).append("\n\n");
+            pokemonInfo.append("Base Experience: ").append(pokeApiReponse.baseExperience).append("\n\n");
+            pokemonInfo.append("Abilities: ").append("\n");
+            for (int i = 0; i < pokeApiReponse.abilities.length; i++) {
+                pokemonInfo.append("\t").append(pokeApiReponse.abilities[i].ability.name).append("\n");
+            } // for
+            pokemonInfo.append("\n").append("Types: ").append("\n");
+            for (int i = 0; i < pokeApiReponse.types.length; i++) {
+                pokemonInfo.append("\t").append(pokeApiReponse.types[i].type.name).append("\n");
+            } // for
+
+            pokemonInfo.append("\n").append("Base Stats: ").append("\n");
+            for (int i = 0; i < pokeApiReponse.stats.length; i++) {
+                pokemonInfo.append("\t").append(pokeApiReponse.stats[i].stat.name).append(": ").append(pokeApiReponse.stats[i].baseStat).append("\n");
+            } // for
+
+            pokemonInfo.append("\n").append("Moves: ").append("\n");
+            for (int i = 0; i < pokeApiReponse.moves.length; i++) {
+                pokemonInfo.append("\t").append(pokeApiReponse.moves[i].move.name).append("\n");
+            } // for
+            Platform.runLater(() -> pokemonInfoText.setText(pokemonInfo.toString()));
+
+            System.out.println(favoriteCardIDs);
+            System.out.println(cards.get(cardIndex).id);
+            checkFavorite();
+
 
             nextCard.setDisable(false);
             favoriteCard.setDisable(false);
-            favoriteCard.setText("Favorite");
             prevCard.setDisable(false);
         } catch (IOException | InterruptedException e) {
             System.out.println("Error sending request");
@@ -275,24 +327,51 @@ public class ApiApp extends Application {
         if (favoriteCard.getText().equals("Favorite")) {
             favoriteCard.setText("Unfavorite");
             favoriteCards.add(cards.get(cardIndex));
+            favoriteCardIDs.add(cards.get(cardIndex).id);
+            favoriteCardImages.add(cardImages.get(cardIndex));
         } else {
+            int index = favoriteCardIDs.indexOf(cards.get(cardIndex).id);
             favoriteCard.setText("Favorite");
-            favoriteCards.remove((cardIndex));
+            favoriteCards.remove(index);
+            favoriteCardIDs.remove(index);
+            favoriteCardImages.remove(index);
         } // if
     } // toggleFavorite
 
 
+    /**
+     * Checks if the current card is a favorite
+     * @param index
+     */
     public void setCardImage(int index) {
         Image cardImage = cardImages.get(index % cardImages.size());
         cardView.setImage(cardImage);
     } // setCardImage
 
+    /**
+     * Shows all favourite cards.
+     */
     public void showFavorites() {
-        if (favoritesStage.isShowing()) {
+        if (favoritesStage != null && favoritesStage.isShowing()) {
             favoritesStage.close();
         } // if
         favoritesStage = new Stage();
         VBox favoritesRoot = new VBox();
+        favoritesStage.setTitle("Favorites");
+        Scene favoritesScene = new Scene(favoritesRoot);
+        favoritesStage.setScene(favoritesScene);
+        favoritesStage.setWidth(800);
+        favoritesStage.setHeight(600);
+        favoritesStage.setMaxHeight(600);
+        favoritesStage.setResizable(false);
+        favoritesStage.sizeToScene();
+        if (favoriteCards.size() == 0) {
+            Label noFavorites = new Label("No favorites");
+            noFavorites.setFont(Font.font("Helvetica", FontWeight.BOLD, 20));
+            favoritesRoot.getChildren().add(noFavorites);
+            favoritesStage.show();
+            return;
+        } // if
         favoritesRoot.setAlignment(Pos.CENTER);
         ScrollPane favoritesScrollPane = new ScrollPane();
         favoritesScrollPane.setFitToWidth(true);
@@ -303,35 +382,27 @@ public class ApiApp extends Application {
         favoritesGrid.setVgap(10);
         favoritesScrollPane.setContent(favoritesGrid);
         favoritesRoot.getChildren().add(favoritesScrollPane);
-        Scene favoritesScene = new Scene(favoritesRoot);
-        favoritesStage.setTitle("Favorites");
-        favoritesStage.setScene(favoritesScene);
-        favoritesStage.setWidth(800);
-        favoritesStage.setHeight(600);
-        favoritesStage.setMaxHeight(600);
-        favoritesStage.setResizable(false);
-        favoritesStage.sizeToScene();
+
         int cardsPerRow = 3;
         for (int i = 0; i < favoriteCards.size(); i++) {
             int row = i / cardsPerRow;
             int col = i % cardsPerRow;
-            ImageView favoriteView = new ImageView(favoriteCards.get(i).images.small);
+            ImageView favoriteView = new ImageView(favoriteCardImages.get(i));
             favoriteView.setFitWidth(192.5);
             favoriteView.setFitHeight(250);
             Button removeButton = new Button("Remove");
             final int finalI = i;
             removeButton.setOnAction(e -> {
                 favoriteCards.remove(finalI);
+                favoriteCardIDs.remove(finalI);
+                favoriteCardImages.remove(finalI);
                 favoritesGrid.getChildren().removeAll(removeButton, favoriteView);
+                checkFavorite();
                 showFavorites();
                 if (favoriteCards.size() == 0) {
                     favoritesStage.close();
                 } // if
-                if (favoriteCards.contains(cards.get(cardIndex))) {
-                    favoriteCard.setText("Unfavorite");
-                } else {
-                    favoriteCard.setText("Favorite");
-                } // if
+
             });
             StackPane cardPane = new StackPane(favoriteView, removeButton);
             favoritesGrid.add(cardPane, col, row);
@@ -339,11 +410,29 @@ public class ApiApp extends Application {
         favoritesStage.show();
     }
 
+    /**
+     * Checks if the current card is in the list of favorite cards and updates the favorite button accordingly
+     */
+    public void checkFavorite() {
+        // check if the current card's id is in the list of favorite cards
+        if (favoriteCardIDs.contains(cards.get(cardIndex).id)) {
+            cards.set(cardIndex, favoriteCards.get(favoriteCardIDs.indexOf(cards.get(cardIndex).id)));
+            Platform.runLater(() -> favoriteCard.setText("Unfavorite"));
+        } else {
+            Platform.runLater(() -> favoriteCard.setText("Favorite"));
+        } // if
+    }
+
+    /**
+     * Runs a runnable in a new thread
+     * @param runnable the runnable to run
+     */
     public void runInNewThread(Runnable runnable) {
         Thread thread = new Thread(runnable);
         thread.setDaemon(true);
         thread.start();
     } // runInNewThread
+
 
 
 } // ApiApp
