@@ -7,10 +7,13 @@ import java.util.List;
 public class DexResponse {
     @SerializedName("flavor_text_entries")
     public List<TextEntry> flavorTextEntries;
+    public int id;
 
     public static class TextEntry {
         @SerializedName("flavor_text")
         public String flavorText;
+
+
         public Language language;
 
         public static class Language {

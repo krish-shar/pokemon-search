@@ -286,7 +286,23 @@ public class ApiApp extends Application {
                 return;
             } // if
             String pokemonTerm = URLEncoder.encode(pokemonName.toLowerCase(), StandardCharsets.UTF_8);
-            String pokeApiURL = PokeAPI + pokemonTerm;
+            String dexEntryURL = DexEntryAPI + pokemonTerm;
+            System.out.println(dexEntryURL);
+            HttpRequest dexEntryRequest = HttpRequest.newBuilder()
+                    .uri(java.net.URI.create(dexEntryURL))
+                    .GET()
+                    .build();
+            HttpResponse<String> dexEntryResponse = HTTP_CLIENT.send(dexEntryRequest, HttpResponse.BodyHandlers.ofString());
+            String dexEntryBody = dexEntryResponse.body();
+
+            if (dexEntryResponse.statusCode() != 200){
+                throw new IOException(dexEntryResponse.toString());
+            }
+            DexResponse dexResponse = GSON.fromJson(dexEntryBody, DexResponse.class);
+
+
+
+            String pokeApiURL = PokeAPI + dexResponse.id;
             System.out.println(pokeApiURL);
 
             HttpRequest pokeApiRequest = HttpRequest.newBuilder()
@@ -307,7 +323,7 @@ public class ApiApp extends Application {
 
             PokeApiResponse pokeApiReponse = GSON.fromJson(pokeApiBody, PokeApiResponse.class);
 
-            String dexEntryURL = DexEntryAPI + pokeApiReponse.id;
+
             String pokemonTcgURL = PokemonTCG + pokeApiReponse.id + "&pageSize=20";
 
             System.out.println(pokemonTcgURL);
@@ -318,18 +334,8 @@ public class ApiApp extends Application {
             HttpResponse<String> pokemonTcgResponse = HTTP_CLIENT.send(pokemonTcgRequest, HttpResponse.BodyHandlers.ofString());
             String pokemonTcgBody = pokemonTcgResponse.body();
 
-            HttpRequest dexEntryRequest = HttpRequest.newBuilder()
-                    .uri(java.net.URI.create(dexEntryURL))
-                    .GET()
-                    .build();
-            HttpResponse<String> dexEntryResponse = HTTP_CLIENT.send(dexEntryRequest, HttpResponse.BodyHandlers.ofString());
-            String dexEntryBody = dexEntryResponse.body();
 
-            if (dexEntryResponse.statusCode() != 200){
-                throw new IOException(dexEntryResponse.toString());
-            }
 
-            DexResponse dexResponse = GSON.fromJson(dexEntryBody, DexResponse.class);
 
             System.out.println("*********PRETTY PRINTED POKEMON TCG BODY**********");
             System.out.println(GSON.toJson(pokemonTcgBody));
@@ -364,8 +370,8 @@ public class ApiApp extends Application {
             Platform.runLater(() -> loadingText.setText("Found " + pokemonName.toLowerCase() + "!"));
             Platform.runLater(() -> loadingBar.setProgress(1));
 
-            String dexEntry = "";
-            for (int i = 0; i < dexResponse.flavorTextEntries.size(); i++) {
+            String dexEntry = "No dex entry found";
+            for (int i = dexResponse.flavorTextEntries.size() - 1; i > 0; i--) {
                 if (dexResponse.flavorTextEntries.get(i).language.name.equals("en")) {
                     dexEntry = dexResponse.flavorTextEntries.get(i).flavorText;
                     break;
