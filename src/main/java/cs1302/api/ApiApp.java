@@ -31,13 +31,13 @@ import java.util.Locale;
 
 
 /**
- * A Pokédex Application
+ * A Pokédex Application which allows the user to find and save pokemon.
  */
 public class ApiApp extends Application {
 
     public static final HttpClient HTTP_CLIENT = HttpClient.newBuilder()
-            .version(HttpClient.Version.HTTP_2)           // uses HTTP protocol version 2 where possible
-            .followRedirects(HttpClient.Redirect.NORMAL)  // always redirects, except from HTTPS to HTTP
+            .version(HttpClient.Version.HTTP_2)       // uses HTTP protocol version 2 where possible
+            .followRedirects(HttpClient.Redirect.NORMAL)
             .build();                                     // builds and returns a HttpClient object
 
     public static Gson GSON = new GsonBuilder()
@@ -146,7 +146,6 @@ public class ApiApp extends Application {
         cardButtons.getChildren().addAll(prevCard, favoriteCard, nextCard);
         scrollPane.setContent(pokemonInfoText);
         scene = new Scene(root);
-        scene.getStylesheets().add("file:resources/styles.css");
         // setup stage
         stage.setTitle("ApiApp!");
         stage.setScene(scene);
@@ -183,7 +182,7 @@ public class ApiApp extends Application {
             } // if
             checkFavorite();
             cardView.setImage(cardImages.get(cardIndex));
-            if (favoriteCards.contains(cards.get(cardIndex))){
+            if (favoriteCards.contains(cards.get(cardIndex))) {
                 favoriteCard.setText("Unfavorite");
             } else {
                 favoriteCard.setText("Favorite");
