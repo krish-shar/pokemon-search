@@ -251,9 +251,14 @@ public class ApiApp extends Application {
 
     public void getPokemonInfo(String pokemonName) {
 
+
         try {
             Platform.runLater(() -> loadingText.setText("Loading..."));
             Platform.runLater(() -> loadingBar.setProgress(0));
+            saveButton.setDisable(true);
+            loadButton.setDisable(true);
+            nextCard.setDisable(true);
+            favoriteCard.setDisable(true);
             cardImages.clear();
             cards.clear();
             nextCard.setDisable(true);
@@ -382,6 +387,8 @@ public class ApiApp extends Application {
             nextCard.setDisable(false);
             favoriteCard.setDisable(false);
             prevCard.setDisable(false);
+            saveButton.setDisable(false);
+            loadButton.setDisable(false);
         } catch (IOException | InterruptedException e) {
             System.out.println("Error sending request");
             Platform.runLater(() -> {
@@ -392,6 +399,9 @@ public class ApiApp extends Application {
             });
             e.printStackTrace();
         } // try/catch
+        // activate buttons
+
+
     } // getPokemonInfo
 
     public void toggleFavorite() {
@@ -666,9 +676,13 @@ public class ApiApp extends Application {
 
             VBox linkText = new VBox(10);
             Text titleText = new Text("Link to card:");
-            TextField linkTextField = new TextField(link);
-            linkTextField.setEditable(false);
-            linkText.getChildren().addAll(titleText, linkTextField);
+            TextField tcgPlayerURL = new TextField(link);
+            TextField cardName = new TextField(favoriteCards.get(index).name);
+            TextField cardmarketURL = new TextField(favoriteCards.get(index).cardmarket.url);
+            cardName.setEditable(false);
+            cardmarketURL.setEditable(false);
+            tcgPlayerURL.setEditable(false);
+            linkText.getChildren().addAll(titleText, cardName, tcgPlayerURL, cardmarketURL);
 
             Button closeButton = new Button("Close");
             closeButton.setOnAction(e -> linkStage.close());
@@ -682,7 +696,5 @@ public class ApiApp extends Application {
             linkStage.showAndWait();
         });
     }
-
-
 
 } // ApiApp

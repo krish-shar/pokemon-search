@@ -19,6 +19,7 @@ public class PokeTcgResponse {
         public String rarity;
         public Images images;
         public CardBuy tcgplayer;
+        public CardBuy cardmarket;
 
         /**
          * Holds the image urls for the card.
