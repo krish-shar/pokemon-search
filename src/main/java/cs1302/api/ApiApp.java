@@ -16,7 +16,6 @@ import javafx.scene.layout.VBox;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
 import javafx.scene.text.Text;
-import javafx.scene.text.TextFlow;
 import javafx.stage.Stage;
 
 import java.io.IOException;
@@ -27,11 +26,10 @@ import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Locale;
 
 
 /**
- * A Pokédex Application which allows the user to find and save pokemon.
+ * A Pokédex Application which allows the user to find and save Pokémon.
  */
 public class ApiApp extends Application {
 
@@ -79,6 +77,7 @@ public class ApiApp extends Application {
     List<PokeTcgResponse.Card> favoriteCards = new LinkedList<>();
     List<String> favoriteCardIDs = new LinkedList<>();
 
+
     /**
      * Constructs an {@code ApiApp} object. This default (i.e., no argument)
      * constructor is executed in Step 2 of the JavaFX Application Life-Cycle.
@@ -111,6 +110,7 @@ public class ApiApp extends Application {
         prevCard.setDisable(true);
         showFavorites = new Button("Show Favorites");
         loadingBar = new ProgressBar();
+        loadingBar.setStyle("-fx-accent: green; -fx-background-color: gray;");
         loadingBar.setProgress(0);
         favoritesStage = new Stage();
 
@@ -166,7 +166,7 @@ public class ApiApp extends Application {
             } else {
                 cardIndex = 0;
             } // if
-            checkFavorite();
+            runInNewThread(this::checkFavorite);
             cardView.setImage(cardImages.get(cardIndex));
             if (favoriteCards.contains(cards.get(cardIndex))) {
                 favoriteCard.setText("Unfavorite");
@@ -180,7 +180,7 @@ public class ApiApp extends Application {
             } else {
                 cardIndex = cardImages.size() - 1;
             } // if
-            checkFavorite();
+            runInNewThread(this::checkFavorite);
             cardView.setImage(cardImages.get(cardIndex));
             if (favoriteCards.contains(cards.get(cardIndex))) {
                 favoriteCard.setText("Unfavorite");
@@ -310,7 +310,7 @@ public class ApiApp extends Application {
 
             System.out.println(favoriteCardIDs);
             System.out.println(cards.get(cardIndex).id);
-            checkFavorite();
+            runInNewThread(this::checkFavorite);
 
 
             nextCard.setDisable(false);
@@ -340,7 +340,8 @@ public class ApiApp extends Application {
 
     /**
      * Checks if the current card is a favorite
-     * @param index
+     * and updates the favorite button accordingly.
+     * @param index the index of the current card
      */
     public void setCardImage(int index) {
         Image cardImage = cardImages.get(index % cardImages.size());
@@ -355,7 +356,7 @@ public class ApiApp extends Application {
             favoritesStage.close();
         } // if
         favoritesStage = new Stage();
-        VBox favoritesRoot = new VBox();
+        VBox favoritesRoot = new VBox(8);
         favoritesStage.setTitle("Favorites");
         Scene favoritesScene = new Scene(favoritesRoot);
         favoritesStage.setScene(favoritesScene);
@@ -392,15 +393,17 @@ public class ApiApp extends Application {
             Button removeButton = new Button("Remove");
             final int finalI = i;
             removeButton.setOnAction(e -> {
-                favoriteCards.remove(finalI);
-                favoriteCardIDs.remove(finalI);
-                favoriteCardImages.remove(finalI);
-                favoritesGrid.getChildren().removeAll(removeButton, favoriteView);
-                checkFavorite();
-                showFavorites();
-                if (favoriteCards.size() == 0) {
-                    favoritesStage.close();
-                } // if
+                runInNewThread(() -> {
+                    favoriteCards.remove(finalI);
+                    favoriteCardIDs.remove(finalI);
+                    favoriteCardImages.remove(finalI);
+                    favoritesGrid.getChildren().removeAll(removeButton, favoriteView);
+                    checkFavorite();
+                    showFavorites();
+                    if (favoriteCards.size() == 0) {
+                        favoritesStage.close();
+                    } // if
+                });
 
             });
             StackPane cardPane = new StackPane(favoriteView, removeButton);
