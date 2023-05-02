@@ -15,6 +15,8 @@ public class DexResponse {
 
         public static class Language {
             public String name;
+
+
         } // Language
     } // TextEntry
 }

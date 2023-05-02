@@ -222,6 +222,14 @@ public class ApiApp extends Application {
 
         showFavorites.setOnAction(event -> showFavorites());
         saveButton.setOnAction(event -> {
+            if (favoriteCards.isEmpty()) {
+                Alert alert = new Alert(Alert.AlertType.ERROR);
+                alert.setTitle("Error");
+                alert.setHeaderText("No favorite cards to load!");
+                alert.setContentText("Please favorite some cards first!");
+                alert.showAndWait();
+                return;
+            } // if
             // show dialog
             saveDialog.showAndWait().ifPresent(key ->
             runInNewThread(() ->{
@@ -233,16 +241,23 @@ public class ApiApp extends Application {
             }));
 
         });
-        loadButton.setOnAction(event ->
-                loadDialog.showAndWait().ifPresent(key ->
+        loadButton.setOnAction(event -> {
+
+            loadDialog.showAndWait().ifPresent(key -> {
+                if (favoritesStage.isShowing()) {
+                    favoritesStage.close();
+                } // if
+
+
                 runInNewThread(() ->{
                     try {
                         loadFavorites(key);
                     } catch (IOException | InterruptedException e) {
                         throw new RuntimeException(e);
                     }
-                })
-        ));
+                });
+            });
+    });
 
 
 
@@ -258,7 +273,6 @@ public class ApiApp extends Application {
             saveButton.setDisable(true);
             loadButton.setDisable(true);
             nextCard.setDisable(true);
-            favoriteCard.setDisable(true);
             cardImages.clear();
             cards.clear();
             nextCard.setDisable(true);
@@ -350,13 +364,21 @@ public class ApiApp extends Application {
             Platform.runLater(() -> loadingText.setText("Found " + pokemonName.toLowerCase() + "!"));
             Platform.runLater(() -> loadingBar.setProgress(1));
 
+            String dexEntry = "";
+            for (int i = 0; i < dexResponse.flavorTextEntries.size(); i++) {
+                if (dexResponse.flavorTextEntries.get(i).language.name.equals("en")) {
+                    dexEntry = dexResponse.flavorTextEntries.get(i).flavorText;
+                    break;
+                } // if
+            } // for
+
             // add information about the Pokémon in the text area
             StringBuilder pokemonInfo = new StringBuilder();
             pokemonInfo.append("Name: ").append(pokeApiReponse.name.toUpperCase()).append("\n\n");
             pokemonInfo.append("ID: ").append(pokeApiReponse.id).append("\n\n");
             pokemonInfo.append("Height: ").append(pokeApiReponse.height).append("\n\n");
             pokemonInfo.append("Weight: ").append(pokeApiReponse.weight).append("\n\n");
-            pokemonInfo.append("Pokédex Entry: ").append(dexResponse.flavorTextEntries.get(0).flavorText).append("\n\n");
+            pokemonInfo.append("Pokédex Entry: ").append(dexEntry).append("\n\n");
             pokemonInfo.append("Base Experience: ").append(pokeApiReponse.baseExperience).append("\n\n");
             pokemonInfo.append("Abilities: ").append("\n");
             for (int i = 0; i < pokeApiReponse.abilities.length; i++) {
@@ -381,7 +403,7 @@ public class ApiApp extends Application {
             System.out.println(favoriteCardIDs);
             System.out.println(cards.get(cardIndex).id);
             runInNewThread(this::checkFavorite);
-            System.out.println(dexResponse.flavorTextEntries.get(0).flavorText);
+            System.out.println(dexEntry);
 
 
             nextCard.setDisable(false);
@@ -394,8 +416,12 @@ public class ApiApp extends Application {
             Platform.runLater(() -> {
                 loadingText.setText("Error finding " + pokemonName.toLowerCase() + "!");
                 loadingBar.setProgress(1);
-                pokemonInfoText.setText("Error finding " + pokemonName.toLowerCase() + "!");
+                pokemonInfoText.setText("Error finding " + pokemonName.toLowerCase() + "!" + "\n\n" + e.getMessage());
                 sendAlert(e);
+                prevCard.setDisable(false);
+                saveButton.setDisable(false);
+                loadButton.setDisable(false);
+                nextCard.setDisable(false);
             });
             e.printStackTrace();
         } // try/catch
@@ -537,8 +563,6 @@ public class ApiApp extends Application {
      */
     public void saveFavorites(List<PokeTcgResponse.Card> favoriteCards, String key) throws IOException, InterruptedException {
         searchButton.setDisable(true);
-        prevCard.setDisable(true);
-        nextCard.setDisable(true);
         favoriteCard.setDisable(true);
         loadButton.setDisable(true);
         saveButton.setDisable(true);
@@ -569,8 +593,6 @@ public class ApiApp extends Application {
             Platform.runLater(() -> favoriteCard.setText("Error saving favorites"));
         }
         searchButton.setDisable(false);
-        prevCard.setDisable(false);
-        nextCard.setDisable(false);
         favoriteCard.setDisable(false);
         loadButton.setDisable(false);
         saveButton.setDisable(false);
@@ -614,11 +636,13 @@ public class ApiApp extends Application {
 
 
             if (favoriteCards == null) {
-                Platform.runLater(() -> loadingText.setText("No favorites found."));
+                Platform.runLater(() -> loadingText.setText("No favorites found. \n Check your key and try again."));
                 searchButton.setDisable(false);
                 prevCard.setDisable(false);
                 nextCard.setDisable(false);
                 favoriteCard.setDisable(false);
+                loadButton.setDisable(false);
+                saveButton.setDisable(false);
                 return;
             }
             favoriteCardIDs.clear();
@@ -653,10 +677,15 @@ public class ApiApp extends Application {
             Platform.runLater(() -> loadingText.setText("Error loading favorites."));
             return;
         }
+        // check if cards are loaded
+        if (cards.size() > 0) {
+            prevCard.setDisable(false);
+            nextCard.setDisable(false);
+            favoriteCard.setDisable(false);
+        }
+
         searchButton.setDisable(false);
-        prevCard.setDisable(false);
-        nextCard.setDisable(false);
-        favoriteCard.setDisable(false);
+
         loadButton.setDisable(false);
         saveButton.setDisable(false);
     }
