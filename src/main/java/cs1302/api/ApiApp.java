@@ -273,8 +273,7 @@ public class ApiApp extends Application {
             saveButton.setDisable(true);
             loadButton.setDisable(true);
             nextCard.setDisable(true);
-            cardImages.clear();
-            cards.clear();
+
             nextCard.setDisable(true);
             Platform.runLater(() -> favoriteCard.setText("Favorite"));
             favoriteCard.setDisable(true);
@@ -345,8 +344,8 @@ public class ApiApp extends Application {
             }
             PokeTcgResponse pokeTcgResponse = GSON.fromJson(pokemonTcgBody, PokeTcgResponse.class);
 
-            cards = new LinkedList<>();
-            cardImages = new LinkedList<>();
+            cardImages.clear();
+            cards.clear();
 
             // get pokemon images
             Image normalImage = new Image(pokeApiReponse.sprites.other.official_artwork.frontDefault);
@@ -424,10 +423,14 @@ public class ApiApp extends Application {
                 loadingBar.setProgress(1);
                 pokemonInfoText.setText("Error finding " + pokemonName.toLowerCase() + "!" + "\n\n" + e.getMessage());
                 sendAlert(e);
-                prevCard.setDisable(false);
+                if (cards.size() > 0) {
+                    prevCard.setDisable(false);
+                    nextCard.setDisable(false);
+                    favoriteCard.setDisable(false);
+                }
                 saveButton.setDisable(false);
                 loadButton.setDisable(false);
-                nextCard.setDisable(false);
+
             });
             e.printStackTrace();
         } // try/catch
