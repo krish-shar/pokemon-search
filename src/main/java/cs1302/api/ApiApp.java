@@ -17,9 +17,10 @@ import javafx.scene.layout.VBox;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
 import javafx.scene.text.Text;
+import javafx.stage.Modality;
 import javafx.stage.Stage;
 
-import java.io.*;
+import java.io.IOException;
 import java.lang.reflect.Type;
 import java.net.URI;
 import java.net.URLEncoder;
@@ -462,6 +463,7 @@ public class ApiApp extends Application {
             favoriteView.setFitWidth(192.5);
             favoriteView.setFitHeight(250);
             Button removeButton = new Button("Remove");
+            Button viewButton = new Button("View");
             final int finalI = i;
             removeButton.setOnAction(e -> {
 
@@ -475,7 +477,11 @@ public class ApiApp extends Application {
                     favoritesStage.close();
                 } // if
             });
-            StackPane cardPane = new StackPane(favoriteView, removeButton);
+            viewButton.setOnAction(e -> showLink(finalI));
+            VBox cardInfo = new VBox(5);
+            cardInfo.setAlignment(Pos.CENTER);
+            cardInfo.getChildren().addAll(removeButton, viewButton);
+            StackPane cardPane = new StackPane(favoriteView, cardInfo);
             favoritesGrid.add(cardPane, col, row);
         } // for
         favoritesStage.show();
@@ -524,6 +530,8 @@ public class ApiApp extends Application {
         prevCard.setDisable(true);
         nextCard.setDisable(true);
         favoriteCard.setDisable(true);
+        loadButton.setDisable(true);
+        saveButton.setDisable(true);
 
         Gson gson = new Gson();
         String json = gson.toJson(favoriteCards);
@@ -554,12 +562,16 @@ public class ApiApp extends Application {
         prevCard.setDisable(false);
         nextCard.setDisable(false);
         favoriteCard.setDisable(false);
+        loadButton.setDisable(false);
+        saveButton.setDisable(false);
     }
 
     /**
      * Loads the list of favorite cards from a database in Firebase
      */
     public void loadFavorites(String key) throws IOException, InterruptedException {
+        loadButton.setDisable(true);
+        saveButton.setDisable(true);
         searchButton.setDisable(true);
         prevCard.setDisable(true);
         nextCard.setDisable(true);
@@ -635,6 +647,40 @@ public class ApiApp extends Application {
         prevCard.setDisable(false);
         nextCard.setDisable(false);
         favoriteCard.setDisable(false);
+        loadButton.setDisable(false);
+        saveButton.setDisable(false);
+    }
+
+    /**
+     * Shows the link to the card's page on the Pokémon TCG website
+     * @param index the index of the card in the list of favorite cards
+     */
+    public void showLink(int index) {
+        String link = favoriteCards.get(index).tcgplayer.url;
+        Platform.runLater(() -> {
+
+            Stage linkStage = new Stage();
+            linkStage.initModality(Modality.APPLICATION_MODAL);
+            linkStage.setTitle("Link");
+            linkStage.setMinWidth(250);
+
+            VBox linkText = new VBox(10);
+            Text titleText = new Text("Link to card:");
+            TextField linkTextField = new TextField(link);
+            linkTextField.setEditable(false);
+            linkText.getChildren().addAll(titleText, linkTextField);
+
+            Button closeButton = new Button("Close");
+            closeButton.setOnAction(e -> linkStage.close());
+
+            VBox layout = new VBox(10);
+            layout.getChildren().addAll(linkText, closeButton);
+            layout.setAlignment(Pos.CENTER);
+
+            Scene scene = new Scene(layout);
+            linkStage.setScene(scene);
+            linkStage.showAndWait();
+        });
     }
 
 
