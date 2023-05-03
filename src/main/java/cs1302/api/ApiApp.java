@@ -36,17 +36,17 @@ import java.util.List;
  */
 public class ApiApp extends Application {
 
-    public static final HttpClient HTTP_CLIENT = HttpClient.newBuilder()
-        .version(HttpClient.Version.HTTP_2)       // uses HTTP protocol version 2 where possible
-        .followRedirects(HttpClient.Redirect.NORMAL)
-        .build();                                     // builds and returns a HttpClient object
-    public static Gson GSON = new GsonBuilder()
-        .setPrettyPrinting()                          // enable nice output when printing
-        .create();
-    public final String pokeAPIURL = "https://pokeapi.co/api/v2/pokemon/";
-    public final String dexEntryAPIURL = "https://pokeapi.co/api/v2/pokemon-species/";
-    public final String pokemonTCGURL =
-        "https://api.pokemontcg.io/v2/cards?q=nationalPokedexNumbers:";
+    private static final HttpClient HTTP_CLIENT = HttpClient.newBuilder()
+            .version(HttpClient.Version.HTTP_2)       // uses HTTP protocol version 2 where possible
+            .followRedirects(HttpClient.Redirect.NORMAL)
+            .build();                                     // builds and returns a HttpClient object
+    private static final Gson GSON = new GsonBuilder()
+            .setPrettyPrinting()                          // enable nice output when printing
+            .create();
+    private final String pokeAPIURL = "https://pokeapi.co/api/v2/pokemon/";
+    private final String dexEntryAPIURL = "https://pokeapi.co/api/v2/pokemon-species/";
+    private final String pokemonTCGURL =
+            "https://api.pokemontcg.io/v2/cards?q=nationalPokedexNumbers:";
     Stage stage;
     Scene scene;
     Stage favoritesStage;
@@ -136,7 +136,9 @@ public class ApiApp extends Application {
 
     } // ApiApp
 
-    /** {@inheritDoc} */
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void start(Stage stage) {
         this.stage = stage;
@@ -161,10 +163,10 @@ public class ApiApp extends Application {
         searchContainer.getChildren().addAll(searchLayer, loadingText);
         searchLayer.getChildren().addAll(searchField, searchButton, showFavorites);
         pokemonImages.getChildren().addAll(normalView, divider, shinyView,
-            loadingBar, buttonContainer);
+                loadingBar, buttonContainer);
         buttonContainer.getChildren().addAll(saveButton, loadButton);
         pokemonContainer.getChildren().addAll(pokemonImages, scrollPane,
-            cardContainer);
+                cardContainer);
         cardContainer.getChildren().addAll(cardView, cardButtons);
         cardButtons.getChildren().addAll(prevCard, favoriteCard, nextCard);
         scrollPane.setContent(pokemonInfoText);
@@ -184,7 +186,7 @@ public class ApiApp extends Application {
     public void init() {
         setCardControls();
         searchButton.setOnAction(event ->
-            runInNewThread(() -> getPokemonInfo(searchField.getText())));
+                runInNewThread(() -> getPokemonInfo(searchField.getText())));
         showFavorites.setOnAction(event -> {
             showFavorites();
         });
@@ -198,13 +200,13 @@ public class ApiApp extends Application {
                 return;
             } // if
             saveDialog.showAndWait().ifPresent(key ->
-                runInNewThread(() -> {
-                    try {
-                        saveFavorites( favoriteCards, key);
-                    } catch (IOException | InterruptedException e) {
-                        sendAlert(e);
-                    }
-                }));
+                    runInNewThread(() -> {
+                        try {
+                            saveFavorites(favoriteCards, key);
+                        } catch (IOException | InterruptedException e) {
+                            sendAlert(e);
+                        }
+                    }));
         });
         loadButton.setOnAction(event -> {
             loadDialog.showAndWait().ifPresent(key -> {
@@ -233,7 +235,7 @@ public class ApiApp extends Application {
     /**
      * Sets the buttons that control the cards up.
      */
-    public void setCardControls() {
+    private void setCardControls() {
         nextCard.setOnAction(event -> {
             if (cardIndex < cards.size() - 1) {
                 cardIndex++;
@@ -274,53 +276,44 @@ public class ApiApp extends Application {
     /**
      * Gets Pokémon information from the endpoints
      * using the parameter.
+     *
      * @param pokemonName is the name of the Pokémon.
      */
-    public void getPokemonInfo(String pokemonName) {
+    private void getPokemonInfo(String pokemonName) {
         try {
-            Platform.runLater(() -> loadingText.setText("Loading..."));
-            Platform.runLater(() -> loadingBar.setProgress(0));
-            saveButton.setDisable(true);
-            loadButton.setDisable(true);
-            nextCard.setDisable(true);
-
-            nextCard.setDisable(true);
-            Platform.runLater(() -> favoriteCard.setText("Favorite"));
-            favoriteCard.setDisable(true);
-            prevCard.setDisable(true);
+            Platform.runLater(() -> {
+                loadingText.setText("Loading...");
+                loadingBar.setProgress(0);
+                favoriteCard.setText("Favorite");
+            });
+            disableButtons();
             cardIndex = 0;
-            if (pokemonName.equals("")) {
-                System.out.println("No pokemon name entered");
+            if (pokemonName.isEmpty() || pokemonName.isBlank()) {
                 throw new IllegalArgumentException("No pokemon name entered");
             } // if
             String pokemonTerm = URLEncoder.encode(pokemonName.toLowerCase(),
-                StandardCharsets.UTF_8);
+                    StandardCharsets.UTF_8);
             String dexEntryURL = dexEntryAPIURL + pokemonTerm;
-            System.out.println(dexEntryURL);
             HttpRequest dexEntryRequest = HttpRequest.newBuilder()
-                .uri(java.net.URI.create(dexEntryURL))
-                .GET()
-                .build();
+                    .uri(java.net.URI.create(dexEntryURL))
+                    .GET()
+                    .build();
             HttpResponse<String> dexEntryResponse = HTTP_CLIENT.send(
-                dexEntryRequest,
-                HttpResponse.BodyHandlers.ofString());
+                    dexEntryRequest,
+                    HttpResponse.BodyHandlers.ofString());
             String dexEntryBody = dexEntryResponse.body();
 
             if (dexEntryResponse.statusCode() != 200) {
-                throw new IOException(dexEntryResponse.toString());
+                throw new IOException(dexEntryBody);
             }
             DexResponse dexResponse = GSON.fromJson(dexEntryBody, DexResponse.class);
-
-
             String pokeApiURL = this.pokeAPIURL + dexResponse.id;
-            System.out.println(pokeApiURL);
-
             HttpRequest pokeApiRequest = HttpRequest.newBuilder()
-                .uri(java.net.URI.create(pokeApiURL))
-                .GET()
-                .build();
+                    .uri(java.net.URI.create(pokeApiURL))
+                    .GET()
+                    .build();
             HttpResponse<String> pokeApiResponse = HTTP_CLIENT.send(pokeApiRequest,
-                HttpResponse.BodyHandlers.ofString());
+                    HttpResponse.BodyHandlers.ofString());
 
             if (pokeApiResponse.statusCode() != 200) {
                 throw new IOException(pokeApiResponse.toString());
@@ -328,21 +321,16 @@ public class ApiApp extends Application {
 
             String pokeApiBody = pokeApiResponse.body();
 
-            System.out.println("*********PRETTY PRINTED POKE API BODY**********");
-            System.out.println(GSON.toJson(pokeApiBody));
-
             PokeApiResponse pokeApiReponse = GSON.fromJson(pokeApiBody, PokeApiResponse.class);
-
-
             String pokemonTcgURL = pokemonTCGURL + pokeApiReponse.id + "&pageSize=20";
 
             System.out.println(pokemonTcgURL);
             HttpRequest pokemonTcgRequest = HttpRequest.newBuilder()
-                .uri(java.net.URI.create(pokemonTcgURL))
-                .GET()
-                .build();
+                    .uri(java.net.URI.create(pokemonTcgURL))
+                    .GET()
+                    .build();
             HttpResponse<String> pokemonTcgResponse = HTTP_CLIENT.send(pokemonTcgRequest,
-                HttpResponse.BodyHandlers.ofString());
+                    HttpResponse.BodyHandlers.ofString());
             String pokemonTcgBody = pokemonTcgResponse.body();
 
             System.out.println("*********PRETTY PRINTED POKEMON TCG BODY**********");
@@ -358,13 +346,13 @@ public class ApiApp extends Application {
 
             // get pokemon images
             Image normalImage = new Image(
-                pokeApiReponse.sprites.other.officialArtwork.frontDefault);
+                    pokeApiReponse.sprites.other.officialArtwork.frontDefault);
             Platform.runLater(() -> loadingBar.setProgress((double) 1
-                / (pokeTcgResponse.data.size() + 2)));
+                    / (pokeTcgResponse.data.size() + 2)));
             Image shinyImage = new Image(
-                pokeApiReponse.sprites.other.officialArtwork.frontShiny);
+                    pokeApiReponse.sprites.other.officialArtwork.frontShiny);
             Platform.runLater(() -> loadingBar.setProgress((double) 2
-                / (pokeTcgResponse.data.size() + 2)));
+                    / (pokeTcgResponse.data.size() + 2)));
             for (int i = 0; i < pokeTcgResponse.data.size(); i++) {
                 Image image = new Image(pokeTcgResponse.data.get(i).images.small);
                 if (image.isError()) {
@@ -375,68 +363,19 @@ public class ApiApp extends Application {
                 cardImages.add(new Image(pokeTcgResponse.data.get(i).images.small));
                 final int progress = i + 2;
                 Platform.runLater(() -> loadingBar.setProgress((double) progress /
-                    (pokeTcgResponse.data.size() + 2)));
+                        (pokeTcgResponse.data.size() + 2)));
             } // for
             setCardImage(cardIndex);
             normalView.setImage(normalImage);
             shinyView.setImage(shinyImage);
             Platform.runLater(() -> loadingText.setText("Found " +
-                pokemonName.toLowerCase() + "!"));
+                    pokemonName.toLowerCase() + "!"));
             Platform.runLater(() -> loadingBar.setProgress(1));
-
-            String dexEntry = "No dex entry found";
-            for (int i = dexResponse.flavorTextEntries.size() - 1; i > 0; i--) {
-                if (dexResponse.flavorTextEntries.get(i).language.name.equals("en")) {
-                    dexEntry = dexResponse.flavorTextEntries.get(i).flavorText;
-                    break;
-                } // if
-            } // for
-
-            // add information about the Pokémon in the text area
-            StringBuilder pokemonInfo = new StringBuilder();
-            pokemonInfo.append("Name: ").append(pokeApiReponse.name.toUpperCase()).append("\n\n");
-            pokemonInfo.append("ID: ").append(pokeApiReponse.id).append("\n\n");
-            pokemonInfo.append("Height: ").append(pokeApiReponse.height).append("\n\n");
-            pokemonInfo.append("Weight: ").append(pokeApiReponse.weight).append("\n\n");
-            pokemonInfo.append("Pokédex Entry: ").append(dexEntry).append("\n\n");
-            pokemonInfo.append("Base Experience: ").append(
-                pokeApiReponse.baseExperience).append("\n\n");
-            pokemonInfo.append("Abilities: ").append("\n");
-            for (int i = 0; i < pokeApiReponse.abilities.length; i++) {
-                pokemonInfo.append("\t").append(
-                    pokeApiReponse.abilities[i].ability.name).append("\n");
-            } // for
-            pokemonInfo.append("\n").append("Types: ").append("\n");
-            for (int i = 0; i < pokeApiReponse.types.length; i++) {
-                pokemonInfo.append("\t").append(
-                    pokeApiReponse.types[i].type.name).append("\n");
-            } // for
-
-            pokemonInfo.append("\n").append("Base Stats: ").append("\n");
-            for (int i = 0; i < pokeApiReponse.stats.length; i++) {
-                pokemonInfo.append("\t").append(
-                    pokeApiReponse.stats[i].stat.name).append(": ")
-                    .append(pokeApiReponse.stats[i].baseStat).append("\n");
-            } // for
-
-            pokemonInfo.append("\n").append("Moves: ").append("\n");
-            for (int i = 0; i < pokeApiReponse.moves.length; i++) {
-                pokemonInfo.append("\t").append(
-                    pokeApiReponse.moves[i].move.name).append("\n");
-            } // for
-            Platform.runLater(() ->
-                pokemonInfoText.setText(pokemonInfo.toString()));
-
+            setPokemonInfoText(pokeApiReponse, dexResponse);
             System.out.println(favoriteCardIDs);
             System.out.println(cards.get(cardIndex).id);
             runInNewThread(this::checkFavorite);
-            System.out.println(dexEntry);
-
-            nextCard.setDisable(false);
-            favoriteCard.setDisable(false);
-            prevCard.setDisable(false);
-            saveButton.setDisable(false);
-            loadButton.setDisable(false);
+            enableButtons();
         } catch (IOException | InterruptedException | IllegalArgumentException e) {
             System.out.println("Error sending request");
             Platform.runLater(() -> {
@@ -458,7 +397,7 @@ public class ApiApp extends Application {
     /**
      * Toggles the favorite status of the card in question.
      */
-    public void toggleFavorite() {
+    private void toggleFavorite() {
         if (favoriteCard.getText().equals("Favorite")) {
             favoriteCard.setText("Unfavorite");
             favoriteCards.add(cards.get(cardIndex));
@@ -477,9 +416,10 @@ public class ApiApp extends Application {
     /**
      * Checks if the current card is a favorite
      * and updates the favorite button accordingly.
+     *
      * @param index the index of the current card
      */
-    public void setCardImage(int index) {
+    private void setCardImage(int index) {
         Image cardImage = cardImages.get(index % cardImages.size());
         cardView.setImage(cardImage);
     } // setCardImage
@@ -487,7 +427,7 @@ public class ApiApp extends Application {
     /**
      * Shows all favourite cards.
      */
-    public void showFavorites() {
+    private void showFavorites() {
         if (favoritesStage != null && favoritesStage.isShowing()) {
             favoritesStage.close();
         } // if
@@ -503,7 +443,7 @@ public class ApiApp extends Application {
         if (favoriteCards.size() == 0) {
             Label noFavorites = new Label("No favorites");
             noFavorites.setFont(Font.font("Helvetica",
-                FontWeight.BOLD, 20));
+                    FontWeight.BOLD, 20));
             favoritesRoot.getChildren().add(noFavorites);
             favoritesStage.show();
             return;
@@ -530,7 +470,7 @@ public class ApiApp extends Application {
                 favoriteCardIDs.remove(finalI);
                 favoriteCardImages.remove(finalI);
                 favoritesGrid.getChildren().removeAll(removeButton,
-                    favoriteView);
+                        favoriteView);
                 Platform.runLater(this::checkFavorite);
                 showFavorites();
                 if (favoriteCards.size() == 0) {
@@ -551,13 +491,13 @@ public class ApiApp extends Application {
      * Checks if the current card is in the list of favorite
      * cards and updates the favorite button accordingly.
      */
-    public void checkFavorite() {
+    private void checkFavorite() {
         if (cards.size() == 0) {
             return;
         } // if
         if (favoriteCardIDs.contains(cards.get(cardIndex).id)) {
             cards.set(cardIndex, favoriteCards.get(favoriteCardIDs
-                .indexOf(cards.get(cardIndex).id)));
+                    .indexOf(cards.get(cardIndex).id)));
             Platform.runLater(() -> favoriteCard.setText("Unfavorite"));
         } else {
             Platform.runLater(() -> favoriteCard.setText("Favorite"));
@@ -566,9 +506,10 @@ public class ApiApp extends Application {
 
     /**
      * Sends an alert to the user with the exception's message.
+     *
      * @param e is the exception that the alert shows.
      */
-    public void sendAlert(Exception e) {
+    private void sendAlert(Exception e) {
         Alert alert = new Alert(Alert.AlertType.ERROR);
         alert.setTitle("Error");
         alert.setHeaderText("Could not find Pokémon");
@@ -578,9 +519,10 @@ public class ApiApp extends Application {
 
     /**
      * Runs a runnable in a new thread.
+     *
      * @param runnable the runnable to run
      */
-    public void runInNewThread(Runnable runnable) {
+    private void runInNewThread(Runnable runnable) {
         Thread thread = new Thread(runnable);
         thread.setDaemon(true);
         thread.start();
@@ -588,11 +530,12 @@ public class ApiApp extends Application {
 
     /**
      * Saves the list of favorite cards to a database in Firebase.
+     *
      * @param favoriteCards a list of all current favorite cards.
-     * @param key is the secret key that the user chooses.
+     * @param key           is the secret key that the user chooses.
      */
-    public void saveFavorites(List<PokeTcgResponse.Card> favoriteCards,
-        String key) throws IOException, InterruptedException {
+    private void saveFavorites(List<PokeTcgResponse.Card> favoriteCards,
+                               String key) throws IOException, InterruptedException {
         disableButtons();
         String json = GSON.toJson(favoriteCards);
 
@@ -604,14 +547,14 @@ public class ApiApp extends Application {
         String url = String.format("https://%s.firebaseio.com%s?", databaseName, path);
 
         HttpRequest request = HttpRequest.newBuilder()
-            .uri(URI.create(url))
-            .header("Content-Type", "application/json")
-            .PUT(HttpRequest.BodyPublishers.ofString(json))
-            .build();
+                .uri(URI.create(url))
+                .header("Content-Type", "application/json")
+                .PUT(HttpRequest.BodyPublishers.ofString(json))
+                .build();
 
         HttpClient client = HttpClient.newHttpClient();
         HttpResponse<String> response = client.send(request,
-            HttpResponse.BodyHandlers.ofString());
+                HttpResponse.BodyHandlers.ofString());
 
         if (response.statusCode() == 200) {
             Platform.runLater(() -> loadingText.setText("Favorites saved successfully."));
@@ -624,23 +567,24 @@ public class ApiApp extends Application {
 
     /**
      * Loads the list of favorite cards from a database in Firebase.
+     *
      * @param key is the Pokémon to be searched.
      */
-    public void loadFavorites(String key) throws IOException, InterruptedException {
+    private void loadFavorites(String key) throws IOException, InterruptedException {
         disableButtons();
         Platform.runLater(() -> loadingText.setText("Loading favorites..."));
         String databaseName = "pokemon-api-992c5-default-rtdb";
         String path = "/" + key + ".json";
         String url = String.format("https://%s.firebaseio.com%s?",
-            databaseName, path);
+                databaseName, path);
         HttpRequest request = HttpRequest.newBuilder()
-            .uri(URI.create(url))
-            .header("Content-Type", "application/json")
-            .GET()
-            .build();
+                .uri(URI.create(url))
+                .header("Content-Type", "application/json")
+                .GET()
+                .build();
         HttpClient client = HttpClient.newHttpClient();
         HttpResponse<String> response = client.send(request,
-            HttpResponse.BodyHandlers.ofString());
+                HttpResponse.BodyHandlers.ofString());
         if (response.statusCode() == 200) {
             Type listType = new TypeToken<List<PokeTcgResponse.Card>>() {
             }.getType();
@@ -648,8 +592,8 @@ public class ApiApp extends Application {
                     GSON.fromJson(response.body(), listType);
             if (favoriteCards == null) {
                 Platform.runLater(() -> sendAlert(
-                    new IOException("No favorites found. " +
-                            " Check your key and try again.")));
+                        new IOException("No favorites found. " +
+                                " Check your key and try again.")));
                 enableButtons();
                 return;
             }
@@ -661,7 +605,7 @@ public class ApiApp extends Application {
                 favoriteCardIDs.add(card.id);
                 int finalI = i;
                 Platform.runLater(() -> loadingBar.setProgress((double) finalI
-                    / favoriteCards.size()));
+                        / favoriteCards.size()));
                 favoriteCardImages.add(new Image(card.images.small));
             }
             Platform.runLater(() -> loadingBar.setProgress(1));
@@ -689,9 +633,10 @@ public class ApiApp extends Application {
 
     /**
      * Shows the link to the card's page on the Pokémon TCG website.
+     *
      * @param index the index of the card in the list of favorite cards
      */
-    public void showLink(int index) {
+    private void showLink(int index) {
         String link = favoriteCards.get(index).tcgplayer.url;
         Platform.runLater(() -> {
 
@@ -705,12 +650,12 @@ public class ApiApp extends Application {
             TextField tcgPlayerURL = new TextField(link);
             TextField cardName = new TextField(favoriteCards.get(index).name);
             TextField cardmarketURL = new TextField(
-                favoriteCards.get(index).cardmarket.url);
+                    favoriteCards.get(index).cardmarket.url);
             cardName.setEditable(false);
             cardmarketURL.setEditable(false);
             tcgPlayerURL.setEditable(false);
             linkText.getChildren().addAll(titleText, cardName,
-                tcgPlayerURL, cardmarketURL);
+                    tcgPlayerURL, cardmarketURL);
             Button closeButton = new Button("Close");
             closeButton.setOnAction(e -> linkStage.close());
 
@@ -725,9 +670,63 @@ public class ApiApp extends Application {
     }
 
     /**
+     * Gets pokemon images.
+     */
+    private void getPokemonImages() {
+
+    } // getPokemonImages
+
+    /**
+     * Set Pokémon information.
+     */
+    private void setPokemonInfoText(PokeApiResponse pokeApiReponse, DexResponse dexResponse) {
+        String dexEntry = "No dex entry found";
+        for (int i = dexResponse.flavorTextEntries.size() - 1; i > 0; i--) {
+            if (dexResponse.flavorTextEntries.get(i).language.name.equals("en")) {
+                dexEntry = dexResponse.flavorTextEntries.get(i).flavorText;
+                break;
+            } // if
+        } // for
+
+        StringBuilder pokemonInfo = new StringBuilder();
+        pokemonInfo.append("Name: ").append(pokeApiReponse.name.toUpperCase()).append("\n\n");
+        pokemonInfo.append("ID: ").append(pokeApiReponse.id).append("\n\n");
+        pokemonInfo.append("Height: ").append(pokeApiReponse.height).append("\n\n");
+        pokemonInfo.append("Weight: ").append(pokeApiReponse.weight).append("\n\n");
+        pokemonInfo.append("Pokédex Entry: ").append(dexEntry).append("\n\n");
+        pokemonInfo.append("Base Experience: ").append(
+                pokeApiReponse.baseExperience).append("\n\n");
+        pokemonInfo.append("Abilities: ").append("\n");
+        for (int i = 0; i < pokeApiReponse.abilities.length; i++) {
+            pokemonInfo.append("\t").append(
+                    pokeApiReponse.abilities[i].ability.name).append("\n");
+        } // for
+        pokemonInfo.append("\n").append("Types: ").append("\n");
+        for (int i = 0; i < pokeApiReponse.types.length; i++) {
+            pokemonInfo.append("\t").append(
+                    pokeApiReponse.types[i].type.name).append("\n");
+        } // for
+
+        pokemonInfo.append("\n").append("Base Stats: ").append("\n");
+        for (int i = 0; i < pokeApiReponse.stats.length; i++) {
+            pokemonInfo.append("\t").append(
+                            pokeApiReponse.stats[i].stat.name).append(": ")
+                    .append(pokeApiReponse.stats[i].baseStat).append("\n");
+        } // for
+
+        pokemonInfo.append("\n").append("Moves: ").append("\n");
+        for (int i = 0; i < pokeApiReponse.moves.length; i++) {
+            pokemonInfo.append("\t").append(
+                    pokeApiReponse.moves[i].move.name).append("\n");
+        } // for
+        Platform.runLater(() ->
+                pokemonInfoText.setText(pokemonInfo.toString()));
+    } // setPokemonInfoText
+
+    /**
      * Disables buttons.
      */
-    public void disableButtons() {
+    private void disableButtons() {
         searchButton.setDisable(true);
         prevCard.setDisable(true);
         nextCard.setDisable(true);
@@ -739,7 +738,7 @@ public class ApiApp extends Application {
     /**
      * Enables buttons.
      */
-    public void enableButtons() {
+    private void enableButtons() {
         searchButton.setDisable(false);
         prevCard.setDisable(false);
         nextCard.setDisable(false);
