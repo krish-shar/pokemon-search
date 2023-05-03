@@ -302,7 +302,8 @@ public class ApiApp extends Application {
             String pokemonTcgURL = pokemonTCGURL + pokeApiResponse.id + "&pageSize=20";
             System.out.println(pokemonTcgURL);
             String pokemonTcgResponse = makeHTTP(pokemonTcgURL);
-            PokeTcgResponse pokeTcgResponse = GSON.fromJson(pokemonTcgResponse, PokeTcgResponse.class);
+            PokeTcgResponse pokeTcgResponse = GSON.fromJson(pokemonTcgResponse,
+                    PokeTcgResponse.class);
             cardImages.clear();
             cards.clear();
             getPokemonImages(pokeApiResponse, pokeTcgResponse);
@@ -572,6 +573,8 @@ public class ApiApp extends Application {
 
     /**
      * Creates http request to get the data from the API.
+     * @param url is the url to get the data from.
+     * @return the body of the http request.
      */
     private String makeHTTP(String url) throws IOException, InterruptedException {
         HttpRequest request = HttpRequest.newBuilder()
