@@ -186,9 +186,11 @@ public class ApiApp extends Application {
     @Override
     public void init() {
         setCardControls();
-        searchButton.setOnAction(event -> runInNewThread(() ->
-            getPokemonInfo(searchField.getText())));
-        showFavorites.setOnAction(event -> showFavorites());
+        searchButton.setOnAction(event ->
+            runInNewThread(() -> getPokemonInfo(searchField.getText())));
+        showFavorites.setOnAction(event -> {
+            showFavorites();
+        });
         saveButton.setOnAction(event -> {
             if (favoriteCards.isEmpty()) {
                 Alert alert = new Alert(Alert.AlertType.ERROR);
@@ -265,13 +267,11 @@ public class ApiApp extends Application {
     }
 
     /**
-     * Gets pokemon information from the endpoints
-     * using the paramter.
-     * @param pokemonName is the name of the pokemon.
+     * Gets Pokémon information from the endpoints
+     * using the parameter.
+     * @param pokemonName is the name of the Pokémon.
      */
     public void getPokemonInfo(String pokemonName) {
-
-
         try {
             Platform.runLater(() -> loadingText.setText("Loading..."));
             Platform.runLater(() -> loadingBar.setProgress(0));
@@ -306,7 +306,6 @@ public class ApiApp extends Application {
                 throw new IOException(dexEntryResponse.toString());
             }
             DexResponse dexResponse = GSON.fromJson(dexEntryBody, DexResponse.class);
-
 
 
             String pokeApiURL = this.pokeAPIURL + dexResponse.id;
@@ -522,8 +521,6 @@ public class ApiApp extends Application {
         favoritesScrollPane.setContent(favoritesGrid);
         favoritesRoot.getChildren().add(favoritesScrollPane);
         for (int i = 0; i < favoriteCards.size(); i++) {
-            int row = i / 3;
-            int col = i % 3;
             ImageView favoriteView = new ImageView(favoriteCardImages.get(i));
             favoriteView.setFitWidth(192.5);
             favoriteView.setFitHeight(250);
@@ -547,7 +544,7 @@ public class ApiApp extends Application {
             cardInfo.setAlignment(Pos.CENTER);
             cardInfo.getChildren().addAll(removeButton, viewButton);
             StackPane cardPane = new StackPane(favoriteView, cardInfo);
-            favoritesGrid.add(cardPane, col, row);
+            favoritesGrid.add(cardPane, i % 3, i / 3);
         } // for
         favoritesStage.show();
     }
