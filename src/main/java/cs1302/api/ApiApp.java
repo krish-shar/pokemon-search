@@ -31,7 +31,6 @@ import java.nio.charset.StandardCharsets;
 import java.util.LinkedList;
 import java.util.List;
 
-
 /**
  * A Pokédex Application which allows the user to find and save Pokémon.
  */
@@ -41,7 +40,6 @@ public class ApiApp extends Application {
         .version(HttpClient.Version.HTTP_2)       // uses HTTP protocol version 2 where possible
         .followRedirects(HttpClient.Redirect.NORMAL)
         .build();                                     // builds and returns a HttpClient object
-
     public static Gson GSON = new GsonBuilder()
         .setPrettyPrinting()                          // enable nice output when printing
         .create();
@@ -157,6 +155,7 @@ public class ApiApp extends Application {
         shinyView.setFitHeight(125);
         cardView.setFitWidth(192.5);
         cardView.setFitHeight(250);
+        searchField.setPromptText("Enter a pokemon or ID here!");
         // setup scene
         root.getChildren().addAll(searchContainer, pokemonContainer);
         searchContainer.getChildren().addAll(searchLayer, loadingText);
@@ -203,7 +202,7 @@ public class ApiApp extends Application {
                     try {
                         saveFavorites( favoriteCards, key);
                     } catch (IOException | InterruptedException e) {
-                        throw new RuntimeException(e);
+                        sendAlert(e);
                     }
                 }));
         });
@@ -212,11 +211,19 @@ public class ApiApp extends Application {
                 if (favoritesStage.isShowing()) {
                     favoritesStage.close();
                 } // if
+                if (key.isEmpty()) {
+                    Alert alert = new Alert(Alert.AlertType.ERROR);
+                    alert.setTitle("Error");
+                    alert.setHeaderText("Invalid key!");
+                    alert.setContentText("Please enter a valid key!");
+                    alert.showAndWait();
+                    return;
+                } // if
                 runInNewThread(() -> {
                     try {
                         loadFavorites(key);
                     } catch (IOException | InterruptedException e) {
-                        throw new RuntimeException(e);
+                       sendAlert(e);
                     }
                 });
             });
@@ -284,8 +291,7 @@ public class ApiApp extends Application {
             cardIndex = 0;
             if (pokemonName.equals("")) {
                 System.out.println("No pokemon name entered");
-                // TODO: Throw exception
-                return;
+                throw new IllegalArgumentException("No pokemon name entered");
             } // if
             String pokemonTerm = URLEncoder.encode(pokemonName.toLowerCase(),
                 StandardCharsets.UTF_8);
@@ -344,7 +350,7 @@ public class ApiApp extends Application {
 
             if (pokemonTcgResponse.statusCode() != 200) {
                 throw new IOException(pokemonTcgResponse.toString());
-            }
+            } // if
             PokeTcgResponse pokeTcgResponse = GSON.fromJson(pokemonTcgBody, PokeTcgResponse.class);
 
             cardImages.clear();
@@ -364,7 +370,7 @@ public class ApiApp extends Application {
                 if (image.isError()) {
                     System.out.println("Error loading image");
                     continue;
-                }
+                } // if
                 cards.add(pokeTcgResponse.data.get(i));
                 cardImages.add(new Image(pokeTcgResponse.data.get(i).images.small));
                 final int progress = i + 2;
@@ -426,20 +432,15 @@ public class ApiApp extends Application {
             runInNewThread(this::checkFavorite);
             System.out.println(dexEntry);
 
-
             nextCard.setDisable(false);
             favoriteCard.setDisable(false);
             prevCard.setDisable(false);
             saveButton.setDisable(false);
             loadButton.setDisable(false);
-        } catch (IOException | InterruptedException e) {
+        } catch (IOException | InterruptedException | IllegalArgumentException e) {
             System.out.println("Error sending request");
             Platform.runLater(() -> {
-                loadingText.setText("Error finding "
-                    + pokemonName.toLowerCase() + "!");
                 loadingBar.setProgress(1);
-                pokemonInfoText.setText("Error finding "
-                    + pokemonName.toLowerCase() + "!" + "\n\n" + e.getMessage());
                 sendAlert(e);
                 if (cards.size() > 0) {
                     prevCard.setDisable(false);
@@ -448,7 +449,6 @@ public class ApiApp extends Application {
                 }
                 saveButton.setDisable(false);
                 loadButton.setDisable(false);
-
             });
             e.printStackTrace();
         } // try/catch
@@ -545,7 +545,7 @@ public class ApiApp extends Application {
             favoritesGrid.add(cardPane, i % 3, i / 3);
         } // for
         favoritesStage.show();
-    }
+    } // showFavorites
 
     /**
      * Checks if the current card is in the list of favorite
@@ -560,8 +560,7 @@ public class ApiApp extends Application {
         } else {
             Platform.runLater(() -> favoriteCard.setText("Favorite"));
         } // if
-    }
-
+    } // checkFavorite
 
     /**
      * Sends an alert to the user with the exception's message.
@@ -573,7 +572,7 @@ public class ApiApp extends Application {
         alert.setHeaderText("Could not find Pokémon");
         alert.setContentText(e.getMessage());
         alert.showAndWait();
-    }
+    } // sendAlert
 
     /**
      * Runs a runnable in a new thread.
@@ -588,14 +587,12 @@ public class ApiApp extends Application {
     /**
      * Saves the list of favorite cards to a database in Firebase.
      * @param favoriteCards a list of all current favorite cards.
-     * @param key is the secret key that the user choses.
+     * @param key is the secret key that the user chooses.
      */
     public void saveFavorites(List<PokeTcgResponse.Card> favoriteCards,
         String key) throws IOException, InterruptedException {
         disableButtons();
-
-        Gson gson = new Gson();
-        String json = gson.toJson(favoriteCards);
+        String json = GSON.toJson(favoriteCards);
 
 
         String databaseName = "pokemon-api-992c5-default-rtdb";
@@ -620,7 +617,7 @@ public class ApiApp extends Application {
             sendAlert(new IOException(response.toString()));
             Platform.runLater(() -> favoriteCard.setText("Error saving favorites"));
         }
-       enableButtons();
+        enableButtons();
     }
 
     /**
@@ -644,14 +641,15 @@ public class ApiApp extends Application {
             HttpResponse.BodyHandlers.ofString());
         if (response.statusCode() == 200) {
             System.out.println("Favorites loaded successfully.");
-            Gson gson = new Gson();
             Type listType = new TypeToken<List<PokeTcgResponse.Card>>() {
-                }.getType();
+            }.getType();
             List<PokeTcgResponse.Card> favoriteCards =
-                gson.fromJson(response.body(), listType);
+                    GSON.fromJson(response.body(), listType);
+
             if (favoriteCards == null) {
-                Platform.runLater(() -> loadingText.setText("No favorites found. " +
-                    "\n Check your key and try again."));
+                Platform.runLater(() -> sendAlert(
+                    new IOException("No favorites found. " +
+                            " Check your key and try again.")));
                 enableButtons();
                 return;
             }
