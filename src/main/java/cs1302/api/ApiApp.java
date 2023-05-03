@@ -646,41 +646,43 @@ public class ApiApp extends Application {
 
     /**
      * Gets pokemon images.
-     * @param pokeApiReponse is the response from the PokeApi
+     *
+     * @param pokeApiReponse  is the response from the PokeApi
      * @param pokeTcgResponse is the response from the PokeTcg
      */
     private void getPokemonImages(PokeApiResponse pokeApiReponse,
                                   PokeTcgResponse pokeTcgResponse) {
         // get pokemon images
-            Image normalImage = new Image(
-                    pokeApiReponse.sprites.other.officialArtwork.frontDefault);
-            Platform.runLater(() -> loadingBar.setProgress((double) 1
-                    / (pokeTcgResponse.data.size() + 2)));
-            Image shinyImage = new Image(
-                    pokeApiReponse.sprites.other.officialArtwork.frontShiny);
-            Platform.runLater(() -> loadingBar.setProgress((double) 2
-                    / (pokeTcgResponse.data.size() + 2)));
-            for (int i = 0; i < pokeTcgResponse.data.size(); i++) {
-                Image image = new Image(pokeTcgResponse.data.get(i).images.small);
-                if (image.isError()) {
-                    System.out.println("Error loading image");
-                    continue;
-                } // if
-                cards.add(pokeTcgResponse.data.get(i));
-                cardImages.add(new Image(pokeTcgResponse.data.get(i).images.small));
-                final int progress = i + 2;
-                Platform.runLater(() -> loadingBar.setProgress((double) progress /
-                        (pokeTcgResponse.data.size() + 2)));
-            } // for
-            setCardImage(cardIndex);
-            normalView.setImage(normalImage);
-            shinyView.setImage(shinyImage);
+        Image normalImage = new Image(
+                pokeApiReponse.sprites.other.officialArtwork.frontDefault);
+        Platform.runLater(() -> loadingBar.setProgress((double) 1
+                / (pokeTcgResponse.data.size() + 2)));
+        Image shinyImage = new Image(
+                pokeApiReponse.sprites.other.officialArtwork.frontShiny);
+        Platform.runLater(() -> loadingBar.setProgress((double) 2
+                / (pokeTcgResponse.data.size() + 2)));
+        for (int i = 0; i < pokeTcgResponse.data.size(); i++) {
+            Image image = new Image(pokeTcgResponse.data.get(i).images.small);
+            if (image.isError()) {
+                System.out.println("Error loading image");
+                continue;
+            } // if
+            cards.add(pokeTcgResponse.data.get(i));
+            cardImages.add(new Image(pokeTcgResponse.data.get(i).images.small));
+            final int progress = i + 2;
+            Platform.runLater(() -> loadingBar.setProgress((double) progress /
+                    (pokeTcgResponse.data.size() + 2)));
+        } // for
+        setCardImage(cardIndex);
+        normalView.setImage(normalImage);
+        shinyView.setImage(shinyImage);
     } // getPokemonImages
 
     /**
      * Set Pokémon information.
+     *
      * @param pokeApiReponse is the response from the PokeAPI.
-     * @param dexResponse is the response from the PokeAPI.
+     * @param dexResponse    is the response from the PokeAPI.
      */
     private void setPokemonInfoText(PokeApiResponse pokeApiReponse, DexResponse dexResponse) {
         String dexEntry = "No dex entry found";
