@@ -678,6 +678,8 @@ public class ApiApp extends Application {
 
     /**
      * Set Pokémon information.
+     * @param pokeApiReponse is the response from the PokeAPI.
+     * @param dexResponse is the response from the PokeAPI.
      */
     private void setPokemonInfoText(PokeApiResponse pokeApiReponse, DexResponse dexResponse) {
         String dexEntry = "No dex entry found";
