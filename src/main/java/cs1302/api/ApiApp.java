@@ -642,7 +642,6 @@ public class ApiApp extends Application {
         HttpResponse<String> response = client.send(request,
             HttpResponse.BodyHandlers.ofString());
         if (response.statusCode() == 200) {
-            System.out.println("Favorites loaded successfully.");
             Type listType = new TypeToken<List<PokeTcgResponse.Card>>() {
             }.getType();
             List<PokeTcgResponse.Card> favoriteCards =
