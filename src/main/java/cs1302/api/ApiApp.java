@@ -302,7 +302,6 @@ public class ApiApp extends Application {
                     dexEntryRequest,
                     HttpResponse.BodyHandlers.ofString());
             String dexEntryBody = dexEntryResponse.body();
-
             if (dexEntryResponse.statusCode() != 200) {
                 throw new IOException(dexEntryBody);
             }
@@ -312,17 +311,15 @@ public class ApiApp extends Application {
                     .uri(java.net.URI.create(pokeApiURL))
                     .GET()
                     .build();
-            HttpResponse<String> pokeApiResponse = HTTP_CLIENT.send(pokeApiRequest,
+            HttpResponse<String> pokeApiHTTPResponse = HTTP_CLIENT.send(pokeApiRequest,
                     HttpResponse.BodyHandlers.ofString());
-
-            if (pokeApiResponse.statusCode() != 200) {
-                throw new IOException(pokeApiResponse.toString());
+            if (pokeApiHTTPResponse.statusCode() != 200) {
+                throw new IOException(pokeApiHTTPResponse.toString());
             }
+            String pokeApiBody = pokeApiHTTPResponse.body();
 
-            String pokeApiBody = pokeApiResponse.body();
-
-            PokeApiResponse pokeApiReponse = GSON.fromJson(pokeApiBody, PokeApiResponse.class);
-            String pokemonTcgURL = pokemonTCGURL + pokeApiReponse.id + "&pageSize=20";
+            PokeApiResponse pokeApiResponse = GSON.fromJson(pokeApiBody, PokeApiResponse.class);
+            String pokemonTcgURL = pokemonTCGURL + pokeApiResponse.id + "&pageSize=20";
 
             System.out.println(pokemonTcgURL);
             HttpRequest pokemonTcgRequest = HttpRequest.newBuilder()
@@ -344,34 +341,12 @@ public class ApiApp extends Application {
             cardImages.clear();
             cards.clear();
 
-            // get pokemon images
-            Image normalImage = new Image(
-                    pokeApiReponse.sprites.other.officialArtwork.frontDefault);
-            Platform.runLater(() -> loadingBar.setProgress((double) 1
-                    / (pokeTcgResponse.data.size() + 2)));
-            Image shinyImage = new Image(
-                    pokeApiReponse.sprites.other.officialArtwork.frontShiny);
-            Platform.runLater(() -> loadingBar.setProgress((double) 2
-                    / (pokeTcgResponse.data.size() + 2)));
-            for (int i = 0; i < pokeTcgResponse.data.size(); i++) {
-                Image image = new Image(pokeTcgResponse.data.get(i).images.small);
-                if (image.isError()) {
-                    System.out.println("Error loading image");
-                    continue;
-                } // if
-                cards.add(pokeTcgResponse.data.get(i));
-                cardImages.add(new Image(pokeTcgResponse.data.get(i).images.small));
-                final int progress = i + 2;
-                Platform.runLater(() -> loadingBar.setProgress((double) progress /
-                        (pokeTcgResponse.data.size() + 2)));
-            } // for
-            setCardImage(cardIndex);
-            normalView.setImage(normalImage);
-            shinyView.setImage(shinyImage);
+            getPokemonImages(pokeApiResponse, pokeTcgResponse);
+
             Platform.runLater(() -> loadingText.setText("Found " +
                     pokemonName.toLowerCase() + "!"));
             Platform.runLater(() -> loadingBar.setProgress(1));
-            setPokemonInfoText(pokeApiReponse, dexResponse);
+            setPokemonInfoText(pokeApiResponse, dexResponse);
             System.out.println(favoriteCardIDs);
             System.out.println(cards.get(cardIndex).id);
             runInNewThread(this::checkFavorite);
@@ -671,9 +646,35 @@ public class ApiApp extends Application {
 
     /**
      * Gets pokemon images.
+     * @param pokeApiReponse is the response from the PokeApi
+     * @param pokeTcgResponse is the response from the PokeTcg
      */
-    private void getPokemonImages() {
-
+    private void getPokemonImages(PokeApiResponse pokeApiReponse,
+                                  PokeTcgResponse pokeTcgResponse) {
+        // get pokemon images
+            Image normalImage = new Image(
+                    pokeApiReponse.sprites.other.officialArtwork.frontDefault);
+            Platform.runLater(() -> loadingBar.setProgress((double) 1
+                    / (pokeTcgResponse.data.size() + 2)));
+            Image shinyImage = new Image(
+                    pokeApiReponse.sprites.other.officialArtwork.frontShiny);
+            Platform.runLater(() -> loadingBar.setProgress((double) 2
+                    / (pokeTcgResponse.data.size() + 2)));
+            for (int i = 0; i < pokeTcgResponse.data.size(); i++) {
+                Image image = new Image(pokeTcgResponse.data.get(i).images.small);
+                if (image.isError()) {
+                    System.out.println("Error loading image");
+                    continue;
+                } // if
+                cards.add(pokeTcgResponse.data.get(i));
+                cardImages.add(new Image(pokeTcgResponse.data.get(i).images.small));
+                final int progress = i + 2;
+                Platform.runLater(() -> loadingBar.setProgress((double) progress /
+                        (pokeTcgResponse.data.size() + 2)));
+            } // for
+            setCardImage(cardIndex);
+            normalView.setImage(normalImage);
+            shinyView.setImage(shinyImage);
     } // getPokemonImages
 
     /**
