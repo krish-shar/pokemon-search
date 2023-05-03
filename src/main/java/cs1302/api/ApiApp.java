@@ -633,7 +633,7 @@ public class ApiApp extends Application {
 
     /**
      * Loads the list of favorite cards from a database in Firebase.
-     * @param key is the pokemon to be searched.
+     * @param key is the Pokémon to be searched.
      */
     public void loadFavorites(String key) throws IOException, InterruptedException {
         loadButton.setDisable(true);
