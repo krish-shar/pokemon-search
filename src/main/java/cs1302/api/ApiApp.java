@@ -354,6 +354,7 @@ public class ApiApp extends Application {
         } catch (IOException | InterruptedException | IllegalArgumentException e) {
             System.out.println("Error sending request");
             Platform.runLater(() -> {
+                loadingText.setText("Error sending request");
                 loadingBar.setProgress(1);
                 sendAlert(e);
                 if (cards.size() > 0) {
@@ -363,6 +364,7 @@ public class ApiApp extends Application {
                 }
                 saveButton.setDisable(false);
                 loadButton.setDisable(false);
+                searchButton.setDisable(false);
             });
             e.printStackTrace();
         } // try/catch
