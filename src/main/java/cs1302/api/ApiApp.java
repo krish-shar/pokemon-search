@@ -294,55 +294,18 @@ public class ApiApp extends Application {
             String pokemonTerm = URLEncoder.encode(pokemonName.toLowerCase(),
                     StandardCharsets.UTF_8);
             String dexEntryURL = dexEntryAPIURL + pokemonTerm;
-            HttpRequest dexEntryRequest = HttpRequest.newBuilder()
-                    .uri(java.net.URI.create(dexEntryURL))
-                    .GET()
-                    .build();
-            HttpResponse<String> dexEntryResponse = HTTP_CLIENT.send(
-                    dexEntryRequest,
-                    HttpResponse.BodyHandlers.ofString());
-            String dexEntryBody = dexEntryResponse.body();
-            if (dexEntryResponse.statusCode() != 200) {
-                throw new IOException(dexEntryBody);
-            }
-            DexResponse dexResponse = GSON.fromJson(dexEntryBody, DexResponse.class);
+            String dexEntryResponse = makeHTTP(dexEntryURL);
+            DexResponse dexResponse = GSON.fromJson(dexEntryResponse, DexResponse.class);
             String pokeApiURL = this.pokeAPIURL + dexResponse.id;
-            HttpRequest pokeApiRequest = HttpRequest.newBuilder()
-                    .uri(java.net.URI.create(pokeApiURL))
-                    .GET()
-                    .build();
-            HttpResponse<String> pokeApiHTTPResponse = HTTP_CLIENT.send(pokeApiRequest,
-                    HttpResponse.BodyHandlers.ofString());
-            if (pokeApiHTTPResponse.statusCode() != 200) {
-                throw new IOException(pokeApiHTTPResponse.toString());
-            }
-            String pokeApiBody = pokeApiHTTPResponse.body();
-
-            PokeApiResponse pokeApiResponse = GSON.fromJson(pokeApiBody, PokeApiResponse.class);
+            String pokeApiResult = makeHTTP(pokeApiURL);
+            PokeApiResponse pokeApiResponse = GSON.fromJson(pokeApiResult, PokeApiResponse.class);
             String pokemonTcgURL = pokemonTCGURL + pokeApiResponse.id + "&pageSize=20";
-
             System.out.println(pokemonTcgURL);
-            HttpRequest pokemonTcgRequest = HttpRequest.newBuilder()
-                    .uri(java.net.URI.create(pokemonTcgURL))
-                    .GET()
-                    .build();
-            HttpResponse<String> pokemonTcgResponse = HTTP_CLIENT.send(pokemonTcgRequest,
-                    HttpResponse.BodyHandlers.ofString());
-            String pokemonTcgBody = pokemonTcgResponse.body();
-
-            System.out.println("*********PRETTY PRINTED POKEMON TCG BODY**********");
-            System.out.println(GSON.toJson(pokemonTcgBody));
-
-            if (pokemonTcgResponse.statusCode() != 200) {
-                throw new IOException(pokemonTcgResponse.toString());
-            } // if
-            PokeTcgResponse pokeTcgResponse = GSON.fromJson(pokemonTcgBody, PokeTcgResponse.class);
-
+            String pokemonTcgResponse = makeHTTP(pokemonTcgURL);
+            PokeTcgResponse pokeTcgResponse = GSON.fromJson(pokemonTcgResponse, PokeTcgResponse.class);
             cardImages.clear();
             cards.clear();
-
             getPokemonImages(pokeApiResponse, pokeTcgResponse);
-
             Platform.runLater(() -> loadingText.setText("Found " +
                     pokemonName.toLowerCase() + "!"));
             Platform.runLater(() -> loadingBar.setProgress(1));
@@ -352,7 +315,6 @@ public class ApiApp extends Application {
             runInNewThread(this::checkFavorite);
             enableButtons();
         } catch (IOException | InterruptedException | IllegalArgumentException e) {
-            System.out.println("Error sending request");
             Platform.runLater(() -> {
                 loadingText.setText("Error sending request");
                 loadingBar.setProgress(1);
@@ -606,6 +568,24 @@ public class ApiApp extends Application {
         searchButton.setDisable(false);
         loadButton.setDisable(false);
         saveButton.setDisable(false);
+    }
+
+    /**
+     * Creates http request to get the data from the API.
+     */
+    private String makeHTTP(String url) throws IOException, InterruptedException {
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(java.net.URI.create(url))
+                .GET()
+                .build();
+        HttpResponse<String> dexEntryResponse = HTTP_CLIENT.send(
+                request,
+                HttpResponse.BodyHandlers.ofString());
+        String body = dexEntryResponse.body();
+        if (dexEntryResponse.statusCode() != 200) {
+            throw new IOException(dexEntryResponse.toString());
+        }
+        return body;
     }
 
     /**
