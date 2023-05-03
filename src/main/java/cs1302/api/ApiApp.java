@@ -45,12 +45,10 @@ public class ApiApp extends Application {
     public static Gson GSON = new GsonBuilder()
         .setPrettyPrinting()                          // enable nice output when printing
         .create();
-
     public final String pokeAPIURL = "https://pokeapi.co/api/v2/pokemon/";
     public final String dexEntryAPIURL = "https://pokeapi.co/api/v2/pokemon-species/";
     public final String pokemonTCGURL =
         "https://api.pokemontcg.io/v2/cards?q=nationalPokedexNumbers:";
-
     Stage stage;
     Scene scene;
     Stage favoritesStage;
@@ -594,10 +592,7 @@ public class ApiApp extends Application {
      */
     public void saveFavorites(List<PokeTcgResponse.Card> favoriteCards,
         String key) throws IOException, InterruptedException {
-        searchButton.setDisable(true);
-        favoriteCard.setDisable(true);
-        loadButton.setDisable(true);
-        saveButton.setDisable(true);
+        disableButtons();
 
         Gson gson = new Gson();
         String json = gson.toJson(favoriteCards);
@@ -625,10 +620,7 @@ public class ApiApp extends Application {
             sendAlert(new IOException(response.toString()));
             Platform.runLater(() -> favoriteCard.setText("Error saving favorites"));
         }
-        searchButton.setDisable(false);
-        favoriteCard.setDisable(false);
-        loadButton.setDisable(false);
-        saveButton.setDisable(false);
+       enableButtons();
     }
 
     /**
@@ -636,32 +628,20 @@ public class ApiApp extends Application {
      * @param key is the Pokémon to be searched.
      */
     public void loadFavorites(String key) throws IOException, InterruptedException {
-        loadButton.setDisable(true);
-        saveButton.setDisable(true);
-        searchButton.setDisable(true);
-        prevCard.setDisable(true);
-        nextCard.setDisable(true);
-        favoriteCard.setDisable(true);
-
+        disableButtons();
         Platform.runLater(() -> loadingText.setText("Loading favorites..."));
-
         String databaseName = "pokemon-api-992c5-default-rtdb";
-        // push the json string as the path
         String path = "/" + key + ".json";
-
         String url = String.format("https://%s.firebaseio.com%s?",
             databaseName, path);
-
         HttpRequest request = HttpRequest.newBuilder()
             .uri(URI.create(url))
             .header("Content-Type", "application/json")
             .GET()
             .build();
-
         HttpClient client = HttpClient.newHttpClient();
         HttpResponse<String> response = client.send(request,
             HttpResponse.BodyHandlers.ofString());
-
         if (response.statusCode() == 200) {
             System.out.println("Favorites loaded successfully.");
             Gson gson = new Gson();
@@ -669,40 +649,26 @@ public class ApiApp extends Application {
                 }.getType();
             List<PokeTcgResponse.Card> favoriteCards =
                 gson.fromJson(response.body(), listType);
-
-
-
             if (favoriteCards == null) {
                 Platform.runLater(() -> loadingText.setText("No favorites found. " +
                     "\n Check your key and try again."));
-                searchButton.setDisable(false);
-                prevCard.setDisable(false);
-                nextCard.setDisable(false);
-                favoriteCard.setDisable(false);
-                loadButton.setDisable(false);
-                saveButton.setDisable(false);
+                enableButtons();
                 return;
             }
             favoriteCardIDs.clear();
             favoriteCardImages.clear();
             this.favoriteCards = favoriteCards;
-
-            // get the images for the favorite cards
             for (int i = 0; i < favoriteCards.size(); i++) {
                 PokeTcgResponse.Card card = favoriteCards.get(i);
                 favoriteCardIDs.add(card.id);
                 String imageUrl = card.images.small;
-
                 Image image = new Image(imageUrl);
                 int finalI = i;
                 Platform.runLater(() -> loadingBar.setProgress((double) finalI
                     / favoriteCards.size()));
-
                 favoriteCardImages.add(image);
             }
             Platform.runLater(() -> loadingBar.setProgress(1));
-
-
             Platform.runLater(() -> {
                 loadingText.setText("Favorites loaded successfully.");
                 showFavorites();
@@ -710,21 +676,17 @@ public class ApiApp extends Application {
                     checkFavorite();
                 }
             });
-
         } else {
             sendAlert(new IOException(response.toString()));
             Platform.runLater(() -> loadingText.setText("Error loading favorites."));
             return;
         }
-        // check if cards are loaded
         if (cards.size() > 0) {
             prevCard.setDisable(false);
             nextCard.setDisable(false);
             favoriteCard.setDisable(false);
         }
-
         searchButton.setDisable(false);
-
         loadButton.setDisable(false);
         saveButton.setDisable(false);
     }
@@ -764,6 +726,30 @@ public class ApiApp extends Application {
             linkStage.setScene(scene);
             linkStage.showAndWait();
         });
+    }
+
+    /**
+     * Disables buttons.
+     */
+    public void disableButtons() {
+        searchButton.setDisable(true);
+        prevCard.setDisable(true);
+        nextCard.setDisable(true);
+        favoriteCard.setDisable(true);
+        loadButton.setDisable(true);
+        saveButton.setDisable(true);
+    }
+
+    /**
+     * Enables buttons.
+     */
+    public void enableButtons() {
+        searchButton.setDisable(false);
+        prevCard.setDisable(false);
+        nextCard.setDisable(false);
+        favoriteCard.setDisable(false);
+        loadButton.setDisable(false);
+        saveButton.setDisable(false);
     }
 
 } // ApiApp
