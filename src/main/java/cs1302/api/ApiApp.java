@@ -520,8 +520,7 @@ public class ApiApp extends Application {
         HttpRequest request = HttpRequest.newBuilder()
                 .uri(URI.create(url))
                 .header("Content-Type", "application/json")
-                .GET()
-                .build();
+                .GET().build();
         HttpClient client = HttpClient.newHttpClient();
         HttpResponse<String> response = client.send(request,
                 HttpResponse.BodyHandlers.ofString());
