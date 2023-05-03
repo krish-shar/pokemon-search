@@ -10,6 +10,10 @@ public class PokeTcgResponse {
     public int count;
     public List<Card> data;
 
+
+    /**
+     * Holds the card information.
+     */
     public static class Card {
         public String id;
         public boolean favorite = false;

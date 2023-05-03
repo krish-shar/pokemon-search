@@ -66,7 +66,7 @@ public class PokeApiResponse {
      */
     public static class OtherSprites {
         @SerializedName("official-artwork")
-        public OfficialArtwork official_artwork;
+        public OfficialArtwork officialArtwork;
 
         /**
          * Holds the official artwork of the Pokémon.
