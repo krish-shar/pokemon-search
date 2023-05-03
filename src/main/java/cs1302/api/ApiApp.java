@@ -223,7 +223,7 @@ public class ApiApp extends Application {
                     try {
                         loadFavorites(key);
                     } catch (IOException | InterruptedException e) {
-                       sendAlert(e);
+                        sendAlert(e);
                     }
                 });
             });
@@ -552,7 +552,9 @@ public class ApiApp extends Application {
      * cards and updates the favorite button accordingly.
      */
     public void checkFavorite() {
-        // check if the current card's id is in the list of favorite cards
+        if (cards.size() == 0) {
+            return;
+        } // if
         if (favoriteCardIDs.contains(cards.get(cardIndex).id)) {
             cards.set(cardIndex, favoriteCards.get(favoriteCardIDs
                 .indexOf(cards.get(cardIndex).id)));
@@ -645,7 +647,6 @@ public class ApiApp extends Application {
             }.getType();
             List<PokeTcgResponse.Card> favoriteCards =
                     GSON.fromJson(response.body(), listType);
-
             if (favoriteCards == null) {
                 Platform.runLater(() -> sendAlert(
                     new IOException("No favorites found. " +
@@ -659,12 +660,10 @@ public class ApiApp extends Application {
             for (int i = 0; i < favoriteCards.size(); i++) {
                 PokeTcgResponse.Card card = favoriteCards.get(i);
                 favoriteCardIDs.add(card.id);
-                String imageUrl = card.images.small;
-                Image image = new Image(imageUrl);
                 int finalI = i;
                 Platform.runLater(() -> loadingBar.setProgress((double) finalI
                     / favoriteCards.size()));
-                favoriteCardImages.add(image);
+                favoriteCardImages.add(new Image(card.images.small));
             }
             Platform.runLater(() -> loadingBar.setProgress(1));
             Platform.runLater(() -> {
