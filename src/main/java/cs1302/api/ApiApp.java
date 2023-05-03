@@ -534,6 +534,7 @@ public class ApiApp extends Application {
                 Platform.runLater(() -> sendAlert(
                         new IOException("No favorites found. " +
                                 " Check your key and try again.")));
+                Platform.runLater(() -> loadingText.setText("Error loading favorites."));
                 enableButtons();
                 return;
             }
