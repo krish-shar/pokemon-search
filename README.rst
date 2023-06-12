@@ -6,17 +6,17 @@ This is a JavaFX application that serves as a Pokemon search engine. It allows u
 
 Features
 ========
-#. **Search:** Users can search for a Pokemon by entering its name or ID. The application will display the Pokemon's name, ID, image, and additional information.
-#. **Pokemon Cards:** The application displays a maximum of 20 cards that the Pokemon is featured on. Users can navigate through these cards to view them all.
-#. **Favorites:** Users can select certain cards as favorites and save them for later viewing. The application provides a "View" button that shows links to purchase the selected cards from two different sources.
-#. **Save and Load:** Users can save their favorite cards to a database for future sessions. They can set a unique key to access their favorites and load them later.
+1. **Search:** Users can search for a Pokemon by entering its name or ID. The application will display the Pokemon's name, ID, image, and additional information.
+2. **Pokemon Cards:** The application displays a maximum of 20 cards that the Pokemon is featured on. Users can navigate through these cards to view them all.
+3. **Favorites:** Users can select certain cards as favorites and save them for later viewing. The application provides a "View" button that shows links to purchase the selected cards from two different sources.
+4. **Save and Load:** Users can save their favorite cards to a database for future sessions. They can set a unique key to access their favorites and load them later.
 
 APIs Used
 =========
 The application utilizes the following APIs:
-#. **PokeAPI:** Used to retrieve basic information about the Pokemon, including their name, ID, image, and pokedex entries.
-#. **PokeTCG API:** Used to fetch the cards that the Pokemon is featured on. The application displays a maximum of 20 cards for each Pokemon.
-#. **Firebase Realtime Database:** Used to user information, including favorited Pokemon/Cards.
+1. **PokeAPI:** Used to retrieve basic information about the Pokemon, including their name, ID, image, and pokedex entries.
+2. **PokeTCG API:** Used to fetch the cards that the Pokemon is featured on. The application displays a maximum of 20 cards for each Pokemon.
+3. **Firebase Realtime Database:** Used to user information, including favorited Pokemon/Cards.
 
 Firebase Integration
 ====================
@@ -25,8 +25,8 @@ Firebase is used to store and manage the user's favorite Pokemon cards. The appl
 What I Learned
 ==============
 During the development of this project, I gained new knowledge and skills in the following areas:
-#. **Firebase Realtime Database:** I learned how to utilize Firebase's Realtime Database to store and retrieve data without relying on the Firebase SDK. This was a new experience for me, as I had previously worked with Firestore but not the Realtime Database.
-#. **JSON Parsing:** In this project, I learned how to properly parse JSON files. Instead of creating a custom JSON parser, I utilized the Gson library, which simplified the parsing process and improved reliability.
+1. **Firebase Realtime Database:** I learned how to utilize Firebase's Realtime Database to store and retrieve data without relying on the Firebase SDK. This was a new experience for me, as I had previously worked with Firestore but not the Realtime Database.
+2. **JSON Parsing:** In this project, I learned how to properly parse JSON files. Instead of creating a custom JSON parser, I utilized the Gson library, which simplified the parsing process and improved reliability.
 Overall, this project provided me with valuable hands-on experience in working with APIs, integrating Firebase for data storage, and enhancing my JSON parsing skills using Gson.
 
 Installation
